@@ -89,6 +89,132 @@
 
   .date-label .today-hint { font-size: 11px; font-weight: 400; opacity: 0.8; display: block; }
 
+  /* View toggle */
+  .view-toggle {
+    display: flex; justify-content: center; gap: 4px;
+    padding: 0 20px 14px;
+    background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 50%, #5eead4 100%);
+  }
+
+  .view-toggle button {
+    padding: 6px 20px; font-size: 13px; font-weight: 600;
+    border: 1.5px solid rgba(255,255,255,0.35); border-radius: 20px;
+    background: transparent; color: rgba(255,255,255,0.8);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    font-family: inherit; min-height: 36px;
+  }
+
+  .view-toggle button.active {
+    background: white; color: var(--accent); border-color: white;
+  }
+
+  .view-toggle button:not(.active):active { background: rgba(255,255,255,0.15); }
+
+  /* Summary cards */
+  .summary-card {
+    background: var(--card); border-radius: 14px; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(19, 78, 74, 0.06); border: 1px solid var(--border);
+    overflow: hidden; padding: 16px;
+  }
+
+  .summary-card-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 12px;
+  }
+
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+
+  .stat-box {
+    background: var(--bg); border-radius: 10px; padding: 12px;
+    text-align: center;
+  }
+
+  .stat-box-value { font-size: 24px; font-weight: 700; color: var(--text); }
+  .stat-box-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-top: 2px; }
+  .stat-box-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  .stat-box-value.green { color: var(--green-dark); }
+  .stat-box-value.red { color: var(--red); }
+  .stat-box-value.neutral { color: var(--text-secondary); }
+
+  .exercise-stat-row {
+    display: flex; align-items: center; padding: 8px 0;
+    border-bottom: 1px solid var(--border); gap: 10px;
+  }
+
+  .exercise-stat-row:last-child { border-bottom: none; }
+
+  .exercise-stat-name { flex: 1; font-size: 14px; font-weight: 500; }
+
+  .exercise-stat-bar {
+    width: 80px; height: 8px; background: var(--border); border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .exercise-stat-fill {
+    height: 100%; background: var(--accent); border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  .exercise-stat-count {
+    font-size: 13px; font-weight: 600; color: var(--accent); min-width: 36px;
+    text-align: right;
+  }
+
+  .rating-summary-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+
+  .rating-summary-row:last-child { margin-bottom: 0; }
+
+  .rating-summary-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .rating-summary-label { font-size: 13px; font-weight: 500; min-width: 70px; }
+
+  .rating-summary-bar {
+    flex: 1; height: 8px; background: var(--border); border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .rating-summary-fill {
+    height: 100%; border-radius: 4px; transition: width 0.3s;
+  }
+
+  .rating-summary-fill.green { background: var(--green); }
+  .rating-summary-fill.yellow { background: var(--yellow); }
+  .rating-summary-fill.red { background: var(--red); }
+
+  .rating-summary-count { font-size: 12px; color: var(--text-secondary); min-width: 20px; text-align: right; }
+
+  .weight-mini-chart {
+    display: flex; align-items: flex-end; gap: 3px; height: 60px;
+    padding: 8px 0;
+  }
+
+  .weight-mini-bar {
+    flex: 1; background: rgba(13, 148, 136, 0.15); border-radius: 3px 3px 0 0;
+    min-width: 4px; position: relative;
+  }
+
+  .weight-mini-bar.has-data { background: var(--accent); }
+
+  .weight-mini-label {
+    font-size: 9px; color: var(--text-secondary); text-align: center;
+    margin-top: 4px;
+  }
+
+  .weight-mini-row {
+    display: flex; gap: 3px; padding: 0 4px;
+  }
+
+  .weight-mini-col {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+  }
+
   /* Sections */
   .content { padding: 10px 12px; padding-bottom: calc(40px + var(--safe-bottom)); }
 
@@ -411,7 +537,18 @@
   <button id="date-next" aria-label="Next day">&#8250;</button>
 </div>
 
+<div class="view-toggle" id="view-toggle">
+  <button class="active" data-view="day">Day</button>
+  <button data-view="week">Week</button>
+  <button data-view="month">Month</button>
+</div>
+
 <div class="content">
+  <!-- Summary (week/month) -->
+  <div id="summary-content" style="display:none;"></div>
+
+  <!-- Day view -->
+  <div id="day-content">
   <!-- Weight -->
   <div class="section" id="sec-weight">
     <div class="section-header" data-section="weight">
@@ -444,6 +581,7 @@
     </div>
     <div class="section-body" id="nutrition-body"></div>
   </div>
+  </div><!-- /day-content -->
 </div>
 
 <div class="toast" id="toast"></div>
@@ -575,6 +713,7 @@
 
   // --- State ---
   let currentDate = new Date();
+  let currentView = 'day'; // 'day', 'week', 'month'
   let editingMeal = null;
   let selectedRating = null;
   let collapsed = { weight: false, exercise: false, nutrition: false };
@@ -589,6 +728,9 @@
   const weightSummary = document.getElementById('weight-summary');
   const exerciseSummary = document.getElementById('exercise-summary');
   const nutritionSummary = document.getElementById('nutrition-summary');
+  const dayContent = document.getElementById('day-content');
+  const summaryContent = document.getElementById('summary-content');
+  const viewToggle = document.getElementById('view-toggle');
   const toastEl = document.getElementById('toast');
   const overlayEl = document.getElementById('modal-overlay');
   const modalTitle = document.getElementById('modal-title');
@@ -598,27 +740,76 @@
   const mealCancel = document.getElementById('meal-cancel');
   const modalActions = document.getElementById('modal-actions');
 
+  // --- View toggle ---
+  viewToggle.addEventListener('click', e => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn || btn.dataset.view === currentView) return;
+    currentView = btn.dataset.view;
+    viewToggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
+    render();
+  });
+
   // --- Date nav ---
+  function getWeekRange(d) {
+    const day = d.getDay();
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((day + 6) % 7)); // Monday
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6); // Sunday
+    return { start: mon, end: sun };
+  }
+
   function updateDateNav() {
     const today = new Date();
-    const isToday = dateKey(currentDate) === dateKey(today);
-    const opts = { weekday: 'long', month: 'short', day: 'numeric' };
-    dateLabelEl.innerHTML = currentDate.toLocaleDateString(undefined, opts) +
-      (isToday ? '<span class="today-hint">Today</span>' : '');
-    dateNextEl.disabled = isToday;
+
+    if (currentView === 'day') {
+      const isToday = dateKey(currentDate) === dateKey(today);
+      const opts = { weekday: 'long', month: 'short', day: 'numeric' };
+      dateLabelEl.innerHTML = currentDate.toLocaleDateString(undefined, opts) +
+        (isToday ? '<span class="today-hint">Today</span>' : '');
+      dateNextEl.disabled = isToday;
+    } else if (currentView === 'week') {
+      const week = getWeekRange(currentDate);
+      const sOpts = { month: 'short', day: 'numeric' };
+      const thisWeek = getWeekRange(today);
+      const isThisWeek = dateKey(week.start) === dateKey(thisWeek.start);
+      dateLabelEl.innerHTML = week.start.toLocaleDateString(undefined, sOpts) + ' – ' +
+        week.end.toLocaleDateString(undefined, sOpts) +
+        (isThisWeek ? '<span class="today-hint">This Week</span>' : '');
+      dateNextEl.disabled = isThisWeek;
+    } else {
+      const isThisMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+      const mOpts = { month: 'long', year: 'numeric' };
+      dateLabelEl.innerHTML = currentDate.toLocaleDateString(undefined, mOpts) +
+        (isThisMonth ? '<span class="today-hint">This Month</span>' : '');
+      dateNextEl.disabled = isThisMonth;
+    }
   }
 
   datePrevEl.addEventListener('click', () => {
-    currentDate.setDate(currentDate.getDate() - 1);
+    if (currentView === 'day') {
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else if (currentView === 'week') {
+      currentDate.setDate(currentDate.getDate() - 7);
+    } else {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
     render();
   });
 
   dateNextEl.addEventListener('click', () => {
     const today = new Date();
-    if (dateKey(currentDate) < dateKey(today)) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      render();
+    if (currentView === 'day') {
+      if (dateKey(currentDate) < dateKey(today)) currentDate.setDate(currentDate.getDate() + 1);
+    } else if (currentView === 'week') {
+      const thisWeek = getWeekRange(today);
+      const curWeek = getWeekRange(currentDate);
+      if (dateKey(curWeek.start) < dateKey(thisWeek.start)) currentDate.setDate(currentDate.getDate() + 7);
+    } else {
+      const isThisMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+      if (!isThisMonth) currentDate.setMonth(currentDate.getMonth() + 1);
     }
+    render();
   });
 
   dateLabelEl.addEventListener('click', () => {
@@ -638,12 +829,20 @@
   // --- Render ---
   function render() {
     updateDateNav();
-    const dk = dateKey(currentDate);
-    const day = getDay(dk);
 
-    renderWeight(day, dk);
-    renderExercise(day, dk);
-    renderNutrition(day, dk);
+    if (currentView === 'day') {
+      dayContent.style.display = '';
+      summaryContent.style.display = 'none';
+      const dk = dateKey(currentDate);
+      const day = getDay(dk);
+      renderWeight(day, dk);
+      renderExercise(day, dk);
+      renderNutrition(day, dk);
+    } else {
+      dayContent.style.display = 'none';
+      summaryContent.style.display = '';
+      renderSummary();
+    }
   }
 
   // --- Weight ---
@@ -855,6 +1054,178 @@
     nutritionBody.querySelectorAll('.meal-row').forEach(row => {
       row.addEventListener('click', () => openMealModal(row.dataset.meal, dk));
     });
+  }
+
+  // --- Summary views ---
+  function getDaysInRange(startDate, endDate) {
+    const days = [];
+    const d = new Date(startDate);
+    const end = new Date(endDate);
+    while (d <= end) {
+      days.push(dateKey(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  }
+
+  function getSummaryRange() {
+    const today = new Date();
+    if (currentView === 'week') {
+      const week = getWeekRange(currentDate);
+      // Cap end at today
+      const end = week.end > today ? today : week.end;
+      return getDaysInRange(week.start, end);
+    } else {
+      const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const end = lastDay > today ? today : lastDay;
+      return getDaysInRange(start, end);
+    }
+  }
+
+  function renderSummary() {
+    const dayKeys = getSummaryRange();
+    const totalDays = dayKeys.length;
+    const periodLabel = currentView === 'week' ? '7' : totalDays;
+
+    let html = '';
+
+    // --- Weight summary ---
+    const weights = dayKeys.filter(dk => data.days[dk] && data.days[dk].weight != null)
+      .map(dk => ({ date: dk, weight: data.days[dk].weight }));
+
+    html += '<div class="summary-card">';
+    html += '<p class="summary-card-title">Weight</p>';
+    if (weights.length > 0) {
+      const first = weights[0].weight;
+      const last = weights[weights.length - 1].weight;
+      const diff = last - first;
+      const min = Math.min(...weights.map(w => w.weight));
+      const max = Math.max(...weights.map(w => w.weight));
+      const avg = (weights.reduce((s, w) => s + w.weight, 0) / weights.length).toFixed(1);
+      const diffClass = diff < -0.05 ? 'green' : diff > 0.05 ? 'red' : 'neutral';
+      const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1);
+
+      html += '<div class="stat-grid">';
+      html += '<div class="stat-box"><div class="stat-box-value">' + avg + '</div><div class="stat-box-label">Average (lbs)</div></div>';
+      html += '<div class="stat-box"><div class="stat-box-value ' + diffClass + '">' + diffStr + '</div><div class="stat-box-label">Change (lbs)</div></div>';
+      html += '<div class="stat-box"><div class="stat-box-value">' + min + '</div><div class="stat-box-label">Low</div></div>';
+      html += '<div class="stat-box"><div class="stat-box-value">' + max + '</div><div class="stat-box-label">High</div></div>';
+      html += '</div>';
+
+      // Mini chart
+      if (weights.length > 1) {
+        const range = max - min || 1;
+        html += '<div class="weight-mini-row">';
+        dayKeys.forEach(dk => {
+          const w = data.days[dk] && data.days[dk].weight;
+          const d = new Date(dk + 'T12:00:00');
+          const dayLabel = d.toLocaleDateString(undefined, { weekday: 'narrow' });
+          const pct = w != null ? Math.max(10, ((w - min) / range) * 100) : 0;
+          html += '<div class="weight-mini-col">';
+          html += '<div style="height:60px;display:flex;align-items:flex-end;width:100%">';
+          html += '<div class="weight-mini-bar' + (w != null ? ' has-data' : '') + '" style="height:' + (w != null ? pct : 5) + '%;width:100%"></div>';
+          html += '</div>';
+          html += '<div class="weight-mini-label">' + dayLabel + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    } else {
+      html += '<div class="stat-box" style="text-align:center;"><div class="stat-box-label">No weight data logged</div></div>';
+    }
+    html += '</div>';
+
+    // --- Exercise summary ---
+    html += '<div class="summary-card">';
+    html += '<p class="summary-card-title">Exercise</p>';
+
+    let totalActiveDays = 0;
+    dayKeys.forEach(dk => {
+      if (data.days[dk]) {
+        const ex = data.days[dk].exercises || {};
+        if (Object.values(ex).some(e => e && e.done)) totalActiveDays++;
+      }
+    });
+
+    html += '<div class="stat-grid" style="margin-bottom:12px">';
+    html += '<div class="stat-box"><div class="stat-box-value">' + totalActiveDays + '</div><div class="stat-box-label">Active Days</div><div class="stat-box-sub">out of ' + totalDays + '</div></div>';
+    const pct = totalDays > 0 ? Math.round(totalActiveDays / totalDays * 100) : 0;
+    html += '<div class="stat-box"><div class="stat-box-value">' + pct + '%</div><div class="stat-box-label">Consistency</div></div>';
+    html += '</div>';
+
+    EXERCISES.forEach(ex => {
+      let count = 0;
+      dayKeys.forEach(dk => {
+        if (data.days[dk] && data.days[dk].exercises && data.days[dk].exercises[ex.key] && data.days[dk].exercises[ex.key].done) count++;
+      });
+      const barPct = totalDays > 0 ? (count / totalDays * 100) : 0;
+      html += '<div class="exercise-stat-row">';
+      html += '<span class="exercise-stat-name">' + ex.label + '</span>';
+      html += '<div class="exercise-stat-bar"><div class="exercise-stat-fill" style="width:' + barPct + '%"></div></div>';
+      html += '<span class="exercise-stat-count">' + count + '/' + totalDays + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // --- Nutrition summary ---
+    html += '<div class="summary-card">';
+    html += '<p class="summary-card-title">Nutrition</p>';
+
+    // Vitamins & Drinks
+    let vitCount = 0;
+    let totalDrinks = 0;
+    dayKeys.forEach(dk => {
+      if (data.days[dk]) {
+        if (data.days[dk].vitamins) vitCount++;
+        if (data.days[dk].drinks) totalDrinks += data.days[dk].drinks;
+      }
+    });
+
+    const avgDrinks = totalDays > 0 ? (totalDrinks / totalDays).toFixed(1) : '0';
+
+    html += '<div class="stat-grid" style="margin-bottom:12px">';
+    html += '<div class="stat-box"><div class="stat-box-value">' + vitCount + '/' + totalDays + '</div><div class="stat-box-label">Vitamins Taken</div></div>';
+    html += '<div class="stat-box"><div class="stat-box-value">' + totalDrinks + '</div><div class="stat-box-label">Total Drinks</div><div class="stat-box-sub">' + avgDrinks + '/day avg</div></div>';
+    html += '</div>';
+
+    // Meal ratings breakdown
+    let greenCount = 0, yellowCount = 0, redCount = 0, totalMeals = 0;
+    dayKeys.forEach(dk => {
+      if (data.days[dk] && data.days[dk].meals) {
+        Object.values(data.days[dk].meals).forEach(meal => {
+          if (meal && meal.rating) {
+            totalMeals++;
+            if (meal.rating === 'green') greenCount++;
+            else if (meal.rating === 'yellow') yellowCount++;
+            else if (meal.rating === 'red') redCount++;
+          }
+        });
+      }
+    });
+
+    if (totalMeals > 0) {
+      html += '<p style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Meal Ratings</p>';
+      [
+        { label: 'Healthy', cls: 'green', count: greenCount },
+        { label: 'Okay', cls: 'yellow', count: yellowCount },
+        { label: 'Unhealthy', cls: 'red', count: redCount }
+      ].forEach(r => {
+        const pct = (r.count / totalMeals * 100);
+        html += '<div class="rating-summary-row">';
+        html += '<div class="rating-summary-dot" style="background:var(--' + r.cls + ')"></div>';
+        html += '<span class="rating-summary-label">' + r.label + '</span>';
+        html += '<div class="rating-summary-bar"><div class="rating-summary-fill ' + r.cls + '" style="width:' + pct + '%"></div></div>';
+        html += '<span class="rating-summary-count">' + r.count + '</span>';
+        html += '</div>';
+      });
+    } else {
+      html += '<div class="stat-box" style="text-align:center"><div class="stat-box-label">No meals rated yet</div></div>';
+    }
+
+    html += '</div>';
+
+    summaryContent.innerHTML = html;
   }
 
   function getWeeklyDrinks() {

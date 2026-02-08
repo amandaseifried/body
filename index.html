@@ -226,6 +226,9 @@
   }
 
   .vitamin-row.done { background: rgba(13, 148, 136, 0.04); }
+  .vitamin-row.done .exercise-check {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
 
   .meal-row {
     display: flex; align-items: center; padding: 12px 16px; gap: 12px;
@@ -233,7 +236,38 @@
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
 
-  .meal-row:last-child { border-bottom: none; }
+  .meal-row:last-of-type { border-bottom: none; }
+
+  .drinks-row {
+    display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+    border-bottom: 1px solid var(--border); min-height: 52px;
+  }
+
+  .drinks-label { font-size: 14px; font-weight: 500; flex: 1; }
+
+  .drinks-counter {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .drinks-counter button {
+    width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--border);
+    background: var(--bg); font-size: 18px; font-weight: 600; color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    min-height: 44px; min-width: 44px;
+  }
+
+  .drinks-counter button:active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .drinks-count {
+    font-size: 20px; font-weight: 700; min-width: 28px; text-align: center;
+    color: var(--text);
+  }
+
+  .drinks-weekly {
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+    background: rgba(13, 148, 136, 0.08); padding: 3px 8px; border-radius: 10px;
+  }
   .meal-row:active { background: #f0fdfb; }
 
   .meal-name { font-size: 14px; font-weight: 500; min-width: 80px; }
@@ -461,8 +495,8 @@
     { key: 'other', label: 'Other' }
   ];
 
-  const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks', 'alcohol'];
-  const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks', alcohol: 'Alcohol' };
+  const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
+  const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
 
   // --- Data layer ---
   let data = { days: {} };
@@ -525,6 +559,7 @@
         weight: null,
         exercises: {},
         vitamins: false,
+        drinks: 0,
         meals: {}
       };
       EXERCISES.forEach(ex => { data.days[dk].exercises[ex.key] = { done: false, notes: '' }; });
@@ -532,6 +567,7 @@
     }
     // Ensure all exercises and meals exist
     const day = data.days[dk];
+    if (day.drinks == null) day.drinks = 0;
     EXERCISES.forEach(ex => { if (!day.exercises[ex.key]) day.exercises[ex.key] = { done: false, notes: '' }; });
     MEALS.forEach(m => { if (!day.meals[m]) day.meals[m] = { summary: '', rating: null }; });
     return day;
@@ -765,6 +801,18 @@
     html += '<span class="exercise-label">Vitamins</span>';
     html += '</div>';
 
+    // Drinks counter
+    const weeklyDrinks = getWeeklyDrinks();
+    html += '<div class="drinks-row">';
+    html += '<span class="drinks-label">Drinks</span>';
+    html += '<span class="drinks-weekly">' + weeklyDrinks + ' this week</span>';
+    html += '<div class="drinks-counter">';
+    html += '<button id="drinks-minus" aria-label="Decrease">&minus;</button>';
+    html += '<span class="drinks-count" id="drinks-count">' + (day.drinks || 0) + '</span>';
+    html += '<button id="drinks-plus" aria-label="Increase">+</button>';
+    html += '</div>';
+    html += '</div>';
+
     // Meals
     let loggedCount = 0;
     MEALS.forEach(m => {
@@ -782,8 +830,10 @@
 
     nutritionBody.innerHTML = html;
 
-    const vitLabel = day.vitamins ? 'Vitamins taken' : '';
-    nutritionSummary.textContent = loggedCount + '/' + MEALS.length + ' meals' + (vitLabel ? ' \u00b7 ' + vitLabel : '');
+    const drinksLabel = day.drinks > 0 ? day.drinks + ' drink' + (day.drinks !== 1 ? 's' : '') : '';
+    const vitLabel = day.vitamins ? 'Vitamins' : '';
+    const summaryParts = [loggedCount + '/' + MEALS.length + ' meals', vitLabel, drinksLabel].filter(Boolean);
+    nutritionSummary.textContent = summaryParts.join(' \u00b7 ');
 
     // Vitamin toggle
     document.getElementById('vitamin-toggle').addEventListener('click', () => {
@@ -793,10 +843,30 @@
       render();
     });
 
+    // Drinks counter
+    document.getElementById('drinks-minus').addEventListener('click', () => {
+      if (day.drinks > 0) { day.drinks--; save(); render(); }
+    });
+    document.getElementById('drinks-plus').addEventListener('click', () => {
+      day.drinks = (day.drinks || 0) + 1; save(); render();
+    });
+
     // Meal rows
     nutritionBody.querySelectorAll('.meal-row').forEach(row => {
       row.addEventListener('click', () => openMealModal(row.dataset.meal, dk));
     });
+  }
+
+  function getWeeklyDrinks() {
+    let total = 0;
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dk = dateKey(d);
+      if (data.days[dk] && data.days[dk].drinks) total += data.days[dk].drinks;
+    }
+    return total;
   }
 
   // --- Meal modal ---

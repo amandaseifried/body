@@ -512,12 +512,119 @@
 
   .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 
+  /* Skin section */
+  .skin-item {
+    display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+    border-bottom: 1px solid var(--border); min-height: 52px;
+  }
+
+  .skin-item:last-of-type { border-bottom: none; }
+
+  .skin-status-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .skin-status-dot.green { background: var(--green); }
+  .skin-status-dot.yellow { background: var(--yellow); }
+  .skin-status-dot.red { background: var(--red); }
+  .skin-status-dot.none { background: var(--border); }
+
+  .skin-item-info { flex: 1; min-width: 0; }
+
+  .skin-item-name {
+    font-size: 14px; font-weight: 500; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .skin-item-meta {
+    font-size: 11px; color: var(--text-secondary); margin-top: 1px;
+  }
+
+  .skin-done-btn {
+    padding: 6px 16px; font-size: 13px; font-weight: 600;
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+    color: var(--accent); cursor: pointer; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent; font-family: inherit; min-height: 36px;
+  }
+
+  .skin-done-btn:active {
+    background: var(--accent); color: white; border-color: var(--accent);
+  }
+
+  .skin-empty {
+    padding: 24px 16px; text-align: center;
+    font-size: 14px; color: var(--text-secondary);
+  }
+
+  .skin-item-detail {
+    padding: 0 16px 12px; border-bottom: 1px solid var(--border);
+  }
+
+  .skin-detail-row {
+    display: flex; align-items: center; gap: 8px; padding: 4px 0;
+    font-size: 12px; color: var(--text-secondary);
+  }
+
+  .skin-detail-actions {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+
+  .skin-detail-actions button {
+    font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary);
+    cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent;
+  }
+
+  .skin-detail-actions button.delete { border-color: var(--red); color: var(--red); }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: calc(24px + var(--safe-bottom)); right: 20px;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: white; font-size: 28px; font-weight: 300;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    cursor: pointer; z-index: 9;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fab:active { transform: scale(0.9); }
+
+  /* Skin add/edit modal */
+  .form-group select {
+    width: 100%; padding: 12px 14px; font-size: 16px;
+    border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg);
+    min-height: 48px; font-family: inherit; color: var(--text);
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f7a78' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+
+  .form-group select:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .freq-row {
+    display: flex; gap: 10px; align-items: center;
+  }
+
+  .freq-row input {
+    width: 80px; text-align: center;
+  }
+
+  .freq-row select {
+    flex: 1;
+  }
+
   @media (min-width: 600px) {
     .content { max-width: 540px; margin: 0 auto; padding: 16px; padding-bottom: 60px; }
     .header-inner { justify-content: center; }
     .header-tagline { text-align: center; }
     .modal { border-radius: 20px; margin-bottom: 40px; }
     .modal-overlay { align-items: center; }
+    .fab { right: calc(50% - 270px + 20px); }
   }
 </style>
 </head>
@@ -581,10 +688,48 @@
     </div>
     <div class="section-body" id="nutrition-body"></div>
   </div>
+  <!-- Skin -->
+  <div class="section" id="sec-skin">
+    <div class="section-header" data-section="skin">
+      <span class="section-icon">&#10024;</span>
+      <span class="section-title">Skin</span>
+      <span class="section-summary" id="skin-summary"></span>
+      <span class="section-chevron">&#9662;</span>
+    </div>
+    <div class="section-body" id="skin-body"></div>
+  </div>
   </div><!-- /day-content -->
 </div>
 
+<button class="fab" id="fab-add" style="display:none" aria-label="Add skin item">+</button>
+
 <div class="toast" id="toast"></div>
+
+<!-- Skin item modal -->
+<div class="modal-overlay" id="skin-modal-overlay">
+  <div class="modal">
+    <h2 id="skin-modal-title">Add Skin Item</h2>
+    <div class="form-group">
+      <label for="skin-name-input">Name</label>
+      <input type="text" id="skin-name-input" placeholder="e.g. Moisturize face" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Expected frequency</label>
+      <div class="freq-row">
+        <input type="number" id="skin-freq-num" value="1" min="1" inputmode="numeric">
+        <select id="skin-freq-unit">
+          <option value="days">days</option>
+          <option value="weeks" selected>weeks</option>
+          <option value="months">months</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions" id="skin-modal-actions">
+      <button class="btn-cancel" id="skin-cancel">Cancel</button>
+      <button class="btn-save" id="skin-save">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- Meal modal -->
 <div class="modal-overlay" id="modal-overlay">
@@ -644,7 +789,8 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) data = JSON.parse(raw);
       if (!data.days) data.days = {};
-    } catch { data = { days: {} }; }
+      if (!data.skinItems) data.skinItems = [];
+    } catch { data = { days: {}, skinItems: [] }; }
   }
 
   function saveLocal() {
@@ -716,7 +862,10 @@
   let currentView = 'day'; // 'day', 'week', 'month'
   let editingMeal = null;
   let selectedRating = null;
-  let collapsed = { weight: false, exercise: false, nutrition: false };
+  let collapsed = { weight: false, exercise: false, nutrition: false, skin: false };
+  let expandedSkinItem = null;
+  let editingSkinItem = null; // null = adding new, string = editing id
+  let undoTimer = null;
 
   // --- DOM ---
   const dateLabelEl = document.getElementById('date-label');
@@ -731,6 +880,15 @@
   const dayContent = document.getElementById('day-content');
   const summaryContent = document.getElementById('summary-content');
   const viewToggle = document.getElementById('view-toggle');
+  const skinBody = document.getElementById('skin-body');
+  const skinSummary = document.getElementById('skin-summary');
+  const fabEl = document.getElementById('fab-add');
+  const skinOverlay = document.getElementById('skin-modal-overlay');
+  const skinModalTitle = document.getElementById('skin-modal-title');
+  const skinNameInput = document.getElementById('skin-name-input');
+  const skinFreqNum = document.getElementById('skin-freq-num');
+  const skinFreqUnit = document.getElementById('skin-freq-unit');
+  const skinModalActions = document.getElementById('skin-modal-actions');
   const toastEl = document.getElementById('toast');
   const overlayEl = document.getElementById('modal-overlay');
   const modalTitle = document.getElementById('modal-title');
@@ -838,9 +996,11 @@
       renderWeight(day, dk);
       renderExercise(day, dk);
       renderNutrition(day, dk);
+      renderSkin();
     } else {
       dayContent.style.display = 'none';
       summaryContent.style.display = '';
+      fabEl.style.display = 'none';
       renderSummary();
     }
   }
@@ -1056,6 +1216,244 @@
     });
   }
 
+  // --- Skin ---
+  function getSkinStatus(item) {
+    if (!item.completions || item.completions.length === 0) {
+      const created = new Date(item.createdAt).getTime();
+      const elapsed = Date.now() - created;
+      const intervalMs = item.intervalDays * 86400000;
+      const ratio = elapsed / intervalMs;
+      return ratio > 1 ? 'red' : ratio > 0.7 ? 'yellow' : 'green';
+    }
+    const last = new Date(item.completions[item.completions.length - 1]).getTime();
+    const elapsed = Date.now() - last;
+    const intervalMs = item.intervalDays * 86400000;
+    const ratio = elapsed / intervalMs;
+    return ratio > 1 ? 'red' : ratio > 0.7 ? 'yellow' : 'green';
+  }
+
+  function getSkinUrgency(item) {
+    if (!item.completions || item.completions.length === 0) {
+      const created = new Date(item.createdAt).getTime();
+      return (Date.now() - created) / (item.intervalDays * 86400000);
+    }
+    const last = new Date(item.completions[item.completions.length - 1]).getTime();
+    return (Date.now() - last) / (item.intervalDays * 86400000);
+  }
+
+  function formatTimeAgo(isoStr) {
+    const ms = Date.now() - new Date(isoStr).getTime();
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function formatInterval(days) {
+    if (days % 30 === 0 && days >= 30) return 'every ' + (days / 30) + ' month' + (days / 30 !== 1 ? 's' : '');
+    if (days % 7 === 0 && days >= 7) return 'every ' + (days / 7) + ' week' + (days / 7 !== 1 ? 's' : '');
+    return 'every ' + days + ' day' + (days !== 1 ? 's' : '');
+  }
+
+  function renderSkin() {
+    if (!data.skinItems) data.skinItems = [];
+    const items = data.skinItems.slice().sort((a, b) => getSkinUrgency(b) - getSkinUrgency(a));
+
+    // FAB visibility
+    fabEl.style.display = currentView === 'day' ? '' : 'none';
+
+    if (items.length === 0) {
+      skinBody.innerHTML = '<div class="skin-empty">No skincare items yet. Tap + to add one.</div>';
+      skinSummary.textContent = 'No items';
+      return;
+    }
+
+    let html = '';
+    let overdueCount = 0, dueSoonCount = 0, onTrackCount = 0;
+
+    items.forEach(item => {
+      const status = getSkinStatus(item);
+      if (status === 'red') overdueCount++;
+      else if (status === 'yellow') dueSoonCount++;
+      else onTrackCount++;
+
+      const lastCompletion = item.completions && item.completions.length > 0
+        ? item.completions[item.completions.length - 1] : null;
+      const metaText = (lastCompletion ? 'Last: ' + formatTimeAgo(lastCompletion) : 'Never done') +
+        ' \u00b7 ' + formatInterval(item.intervalDays);
+      const isExpanded = expandedSkinItem === item.id;
+
+      html += '<div class="skin-item" data-skin-id="' + item.id + '">';
+      html += '<div class="skin-status-dot ' + status + '"></div>';
+      html += '<div class="skin-item-info">';
+      html += '<div class="skin-item-name">' + escapeHtml(item.name) + '</div>';
+      html += '<div class="skin-item-meta">' + metaText + '</div>';
+      html += '</div>';
+      html += '<button class="skin-done-btn" data-skin-done="' + item.id + '">Done</button>';
+      html += '</div>';
+
+      if (isExpanded) {
+        html += '<div class="skin-item-detail" data-skin-detail="' + item.id + '">';
+        html += '<div class="skin-detail-row">Frequency: ' + formatInterval(item.intervalDays) + '</div>';
+        html += '<div class="skin-detail-row">Completions: ' + (item.completions ? item.completions.length : 0) + '</div>';
+        html += '<div class="skin-detail-actions">';
+        html += '<button data-skin-edit="' + item.id + '">Edit</button>';
+        html += '<button class="delete" data-skin-delete="' + item.id + '">Delete</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+    });
+
+    skinBody.innerHTML = html;
+
+    const parts = [];
+    if (overdueCount > 0) parts.push(overdueCount + ' overdue');
+    if (dueSoonCount > 0) parts.push(dueSoonCount + ' due soon');
+    if (onTrackCount > 0) parts.push(onTrackCount + ' on track');
+    skinSummary.textContent = parts.join(' \u00b7 ');
+
+    // Wire events
+    skinBody.querySelectorAll('.skin-item').forEach(el => {
+      el.addEventListener('click', e => {
+        if (e.target.closest('.skin-done-btn')) return;
+        const id = el.dataset.skinId;
+        expandedSkinItem = expandedSkinItem === id ? null : id;
+        renderSkin();
+      });
+    });
+
+    skinBody.querySelectorAll('.skin-done-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.dataset.skinDone;
+        const item = data.skinItems.find(i => i.id === id);
+        if (!item) return;
+        if (!item.completions) item.completions = [];
+        const ts = new Date().toISOString();
+        item.completions.push(ts);
+        save();
+        showToast(item.name + ' done! <span style="text-decoration:underline;cursor:pointer" id="undo-skin">Undo</span>');
+        renderSkin();
+
+        // Undo
+        if (undoTimer) clearTimeout(undoTimer);
+        undoTimer = setTimeout(() => {
+          const undoEl = document.getElementById('undo-skin');
+          if (undoEl) undoEl.remove();
+        }, 4000);
+
+        setTimeout(() => {
+          const undoEl = document.getElementById('undo-skin');
+          if (undoEl) {
+            undoEl.addEventListener('click', () => {
+              const idx = item.completions.indexOf(ts);
+              if (idx > -1) item.completions.splice(idx, 1);
+              save();
+              showToast('Undone');
+              renderSkin();
+            });
+          }
+        }, 50);
+      });
+    });
+
+    skinBody.querySelectorAll('[data-skin-edit]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        openSkinModal(btn.dataset.skinEdit);
+      });
+    });
+
+    skinBody.querySelectorAll('[data-skin-delete]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.dataset.skinDelete;
+        const item = data.skinItems.find(i => i.id === id);
+        if (confirm('Delete "' + item.name + '"?')) {
+          data.skinItems = data.skinItems.filter(i => i.id !== id);
+          expandedSkinItem = null;
+          save();
+          showToast('Deleted');
+          renderSkin();
+        }
+      });
+    });
+  }
+
+  // --- Skin modal ---
+  function openSkinModal(editId) {
+    editingSkinItem = editId || null;
+    if (editId) {
+      const item = data.skinItems.find(i => i.id === editId);
+      skinModalTitle.textContent = 'Edit Skin Item';
+      skinNameInput.value = item.name;
+      // Reverse-engineer frequency
+      if (item.intervalDays % 30 === 0 && item.intervalDays >= 30) {
+        skinFreqNum.value = item.intervalDays / 30;
+        skinFreqUnit.value = 'months';
+      } else if (item.intervalDays % 7 === 0 && item.intervalDays >= 7) {
+        skinFreqNum.value = item.intervalDays / 7;
+        skinFreqUnit.value = 'weeks';
+      } else {
+        skinFreqNum.value = item.intervalDays;
+        skinFreqUnit.value = 'days';
+      }
+    } else {
+      skinModalTitle.textContent = 'Add Skin Item';
+      skinNameInput.value = '';
+      skinFreqNum.value = 1;
+      skinFreqUnit.value = 'weeks';
+    }
+    skinOverlay.classList.add('open');
+    setTimeout(() => skinNameInput.focus(), 100);
+  }
+
+  function closeSkinModal() {
+    skinOverlay.classList.remove('open');
+    editingSkinItem = null;
+  }
+
+  function saveSkinItem() {
+    const name = skinNameInput.value.trim();
+    if (!name) return;
+    const num = parseInt(skinFreqNum.value) || 1;
+    const unit = skinFreqUnit.value;
+    const intervalDays = unit === 'months' ? num * 30 : unit === 'weeks' ? num * 7 : num;
+
+    if (editingSkinItem) {
+      const item = data.skinItems.find(i => i.id === editingSkinItem);
+      if (item) {
+        item.name = name;
+        item.intervalDays = intervalDays;
+      }
+      showToast('Updated');
+    } else {
+      if (!data.skinItems) data.skinItems = [];
+      data.skinItems.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name,
+        intervalDays,
+        createdAt: new Date().toISOString(),
+        completions: []
+      });
+      showToast(name + ' added');
+    }
+    save();
+    closeSkinModal();
+    expandedSkinItem = null;
+    renderSkin();
+  }
+
+  // FAB
+  fabEl.addEventListener('click', () => openSkinModal(null));
+
+  // Skin modal events
+  skinOverlay.addEventListener('click', e => { if (e.target === skinOverlay) closeSkinModal(); });
+  document.getElementById('skin-cancel').addEventListener('click', closeSkinModal);
+  document.getElementById('skin-save').addEventListener('click', saveSkinItem);
+
   // --- Summary views ---
   function getDaysInRange(startDate, endDate) {
     const days = [];
@@ -1225,6 +1623,37 @@
 
     html += '</div>';
 
+    // --- Skin summary ---
+    if (data.skinItems && data.skinItems.length > 0) {
+      html += '<div class="summary-card">';
+      html += '<p class="summary-card-title">Skin</p>';
+
+      // Count completions in range
+      const rangeStart = new Date(dayKeys[0] + 'T00:00:00').getTime();
+      const rangeEnd = new Date(dayKeys[dayKeys.length - 1] + 'T23:59:59').getTime();
+      let totalCompletions = 0;
+
+      data.skinItems.forEach(item => {
+        let count = 0;
+        (item.completions || []).forEach(c => {
+          const t = new Date(c).getTime();
+          if (t >= rangeStart && t <= rangeEnd) count++;
+        });
+        totalCompletions += count;
+
+        const status = getSkinStatus(item);
+        const lastC = item.completions && item.completions.length > 0 ? item.completions[item.completions.length - 1] : null;
+        html += '<div class="exercise-stat-row">';
+        html += '<div class="skin-status-dot ' + status + '" style="flex-shrink:0"></div>';
+        html += '<span class="exercise-stat-name">' + escapeHtml(item.name) + '</span>';
+        html += '<span class="exercise-stat-count">' + count + '</span>';
+        html += '</div>';
+      });
+
+      html += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text-secondary)">' + totalCompletions + ' total completions this ' + (currentView === 'week' ? 'week' : 'month') + '</div>';
+      html += '</div>';
+    }
+
     summaryContent.innerHTML = html;
   }
 
@@ -1296,7 +1725,10 @@
   overlayEl.addEventListener('click', e => { if (e.target === overlayEl) closeModal(); });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlayEl.classList.contains('open')) closeModal();
+    if (e.key === 'Escape') {
+      if (skinOverlay.classList.contains('open')) closeSkinModal();
+      else if (overlayEl.classList.contains('open')) closeModal();
+    }
   });
 
   // Rating picker
@@ -1323,9 +1755,9 @@
   let toastTimer = null;
   function showToast(msg) {
     if (toastTimer) clearTimeout(toastTimer);
-    toastEl.textContent = msg;
+    toastEl.innerHTML = msg;
     toastEl.classList.add('visible');
-    toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 2500);
+    toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 4000);
   }
 
   // --- Helpers ---

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'body-v2';
+const CACHE_NAME = 'body-v3';
 const ASSETS = [
   '/body/',
   '/body/index.html',

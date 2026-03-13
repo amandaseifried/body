@@ -515,31 +515,21 @@
   .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 
   /* Daily notes */
-  .notes-section {
-    margin: 10px 12px;
-    background: var(--card);
-    border-radius: 14px;
+  .exercise-notes-bar {
+    margin: 8px 12px 4px;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 10px;
     border: 1px solid var(--border);
-    box-shadow: 0 1px 4px rgba(13, 148, 136, 0.06);
-    overflow: hidden;
   }
 
-  .notes-section-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 14px 16px 10px;
-    font-size: 14px; font-weight: 600; color: var(--text-secondary);
+  .exercise-notes-bar textarea {
+    width: 100%; border: none; background: transparent;
+    font-family: inherit; font-size: 13px; color: var(--text);
+    resize: none; line-height: 1.5;
   }
-
-  .notes-section-header span { font-size: 16px; }
-
-  .notes-textarea {
-    width: 100%; padding: 0 16px 14px;
-    font-size: 14px; line-height: 1.6;
-    border: none; background: transparent;
-    font-family: inherit; color: var(--text);
-    resize: none; min-height: 80px;
-  }
-  .notes-textarea:focus { outline: none; }
+  .exercise-notes-bar textarea:focus { outline: none; }
+  .exercise-notes-bar textarea::placeholder { color: var(--text-secondary); }
   .notes-textarea::placeholder { color: var(--text-secondary); opacity: 0.6; }
 
   /* Skin section */
@@ -727,11 +717,6 @@
       <span class="section-chevron">&#9662;</span>
     </div>
     <div class="section-body" id="skin-body"></div>
-  </div>
-  <!-- Notes -->
-  <div class="notes-section" id="notes-section">
-    <div class="notes-section-header"><span>📝</span> Notes</div>
-    <textarea class="notes-textarea" id="notes-textarea" placeholder="Anything to remember today…" rows="3"></textarea>
   </div>
   </div><!-- /day-content -->
 </div>
@@ -1051,7 +1036,6 @@
       renderExercise(day, dk);
       renderNutrition(day, dk);
       renderSkin();
-      renderNotes(day);
     } else {
       dayContent.style.display = 'none';
       summaryContent.style.display = '';
@@ -1173,8 +1157,16 @@
       });
     });
 
+    html += '<div class="exercise-notes-bar"><textarea id="exercise-notes" rows="2" placeholder="Notes…">' +
+      escapeHtml(day.notes || '') + '</textarea></div>';
+
     exerciseBody.innerHTML = html;
     exerciseSummary.textContent = totalMins > 0 ? totalMins + ' min logged' : '';
+
+    // Wire notes
+    const notesEl = exerciseBody.querySelector('#exercise-notes');
+    notesEl.addEventListener('click', e => e.stopPropagation());
+    notesEl.addEventListener('input', () => { day.notes = notesEl.value; save(); });
 
     // Wire intensity buttons
     exerciseBody.querySelectorAll('.intensity-btn').forEach(btn => {
@@ -1835,15 +1827,6 @@
 
   function escapeAttr(s) {
     return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  function renderNotes(day) {
-    const ta = document.getElementById('notes-textarea');
-    ta.value = day.notes || '';
-    ta.oninput = () => {
-      day.notes = ta.value;
-      save();
-    };
   }
 
   // --- Init ---

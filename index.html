@@ -302,47 +302,49 @@
 
   .weight-history-item strong { color: var(--text); font-weight: 600; }
 
+  /* Exercise category header */
+  .exercise-category {
+    padding: 8px 16px 4px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    background: rgba(13, 148, 136, 0.03);
+  }
+
   /* Exercise rows */
   .exercise-row {
-    display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+    display: flex; align-items: center; padding: 10px 16px; gap: 10px;
     border-bottom: 1px solid var(--border); min-height: 52px;
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-
   .exercise-row:last-of-type { border-bottom: none; }
-  .exercise-row.done { background: rgba(13, 148, 136, 0.04); }
-
-  .exercise-check {
-    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: all 0.15s; font-size: 14px; color: transparent;
-  }
-
-  .exercise-row.done .exercise-check {
-    background: var(--accent); border-color: var(--accent); color: white;
-  }
 
   .exercise-label { flex: 1; font-size: 14px; font-weight: 500; }
 
-  .exercise-freq {
-    font-size: 11px; font-weight: 600; color: var(--accent);
-    background: rgba(13, 148, 136, 0.08); padding: 3px 8px; border-radius: 10px;
-  }
+  /* Intensity buttons */
+  .intensity-row { display: flex; gap: 4px; }
 
-  .exercise-notes {
-    padding: 0 16px 12px 56px;
-    border-bottom: 1px solid var(--border);
+  .intensity-btn {
+    width: 34px; height: 32px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    border: 1.5px solid var(--border); background: none; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; transition: all 0.12s;
+    font-family: inherit; color: var(--text-secondary);
   }
+  .intensity-btn.low.active  { background: var(--green);  border-color: var(--green);  color: white; }
+  .intensity-btn.medium.active { background: var(--yellow); border-color: var(--yellow); color: white; }
+  .intensity-btn.high.active { background: var(--red);   border-color: var(--red);   color: white; }
 
-  .exercise-notes input {
-    width: 100%; padding: 8px 12px; font-size: 13px;
-    border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
-    font-family: inherit; color: var(--text); min-height: 40px;
+  /* Minutes input */
+  .minutes-wrap { display: flex; align-items: center; gap: 4px; }
+
+  .minutes-input {
+    width: 48px; padding: 4px 6px; font-size: 13px; font-weight: 600;
+    border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg);
+    color: var(--text); font-family: inherit; text-align: center; min-height: 32px;
   }
-
-  .exercise-notes input:focus {
+  .minutes-input:focus {
     outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow);
   }
+  .minutes-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
 
   /* Nutrition */
   .vitamin-row {
@@ -511,6 +513,34 @@
   }
 
   .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+  /* Daily notes */
+  .notes-section {
+    margin: 10px 12px;
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(13, 148, 136, 0.06);
+    overflow: hidden;
+  }
+
+  .notes-section-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 10px;
+    font-size: 14px; font-weight: 600; color: var(--text-secondary);
+  }
+
+  .notes-section-header span { font-size: 16px; }
+
+  .notes-textarea {
+    width: 100%; padding: 0 16px 14px;
+    font-size: 14px; line-height: 1.6;
+    border: none; background: transparent;
+    font-family: inherit; color: var(--text);
+    resize: none; min-height: 80px;
+  }
+  .notes-textarea:focus { outline: none; }
+  .notes-textarea::placeholder { color: var(--text-secondary); opacity: 0.6; }
 
   /* Skin section */
   .skin-item {
@@ -698,6 +728,11 @@
     </div>
     <div class="section-body" id="skin-body"></div>
   </div>
+  <!-- Notes -->
+  <div class="notes-section" id="notes-section">
+    <div class="notes-section-header"><span>📝</span> Notes</div>
+    <textarea class="notes-textarea" id="notes-textarea" placeholder="Anything to remember today…" rows="3"></textarea>
+  </div>
   </div><!-- /day-content -->
 </div>
 
@@ -770,13 +805,21 @@
   const STORAGE_KEY = 'bodyTracker';
   const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzAM4XV1EMoIKsP5x88blS_4cYZ7qPG0aWn_vP2FEB4XjCUDSnStARZZCFzRPTVR2Y3VQ/exec?app=body';
 
-  const EXERCISES = [
-    { key: 'morning-stretch', label: 'Morning Stretch' },
-    { key: 'walking', label: 'Walking' },
-    { key: 'weight-training', label: 'Weight Training' },
-    { key: 'class', label: 'Class' },
-    { key: 'other', label: 'Other' }
+  const EXERCISE_CATEGORIES = [
+    { label: 'Cardio', items: [
+      { key: 'running',  label: 'Running'  },
+      { key: 'walking',  label: 'Walking'  },
+      { key: 'cycling',  label: 'Cycling'  },
+    ]},
+    { label: 'Weight Training', items: [
+      { key: 'weights',  label: 'Weights'  },
+      { key: 'classes',  label: 'Classes'  },
+    ]},
+    { label: 'Other', items: [
+      { key: 'other',    label: 'Other'    },
+    ]},
   ];
+  const EXERCISES = EXERCISE_CATEGORIES.flatMap(c => c.items);
 
   const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
   const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
@@ -846,13 +889,22 @@
         drinks: 0,
         meals: {}
       };
-      EXERCISES.forEach(ex => { data.days[dk].exercises[ex.key] = { done: false, notes: '' }; });
+      EXERCISES.forEach(ex => { data.days[dk].exercises[ex.key] = { intensity: null, minutes: 0 }; });
       MEALS.forEach(m => { data.days[dk].meals[m] = { summary: '', rating: null }; });
     }
-    // Ensure all exercises and meals exist
+    // Ensure all exercises and meals exist; migrate old format
     const day = data.days[dk];
     if (day.drinks == null) day.drinks = 0;
-    EXERCISES.forEach(ex => { if (!day.exercises[ex.key]) day.exercises[ex.key] = { done: false, notes: '' }; });
+    if (day.notes == null) day.notes = '';
+    EXERCISES.forEach(ex => {
+      const e = day.exercises[ex.key];
+      if (!e) {
+        day.exercises[ex.key] = { intensity: null, minutes: 0 };
+      } else if (e.hasOwnProperty('done')) {
+        // Migrate old { done, notes } format
+        day.exercises[ex.key] = { intensity: e.done ? 'medium' : null, minutes: 0 };
+      }
+    });
     MEALS.forEach(m => { if (!day.meals[m]) day.meals[m] = { summary: '', rating: null }; });
     return day;
   }
@@ -922,10 +974,11 @@
 
     if (currentView === 'day') {
       const isToday = dateKey(currentDate) === dateKey(today);
+      const maxFuture = new Date(today); maxFuture.setDate(today.getDate() + 3);
       const opts = { weekday: 'long', month: 'short', day: 'numeric' };
       dateLabelEl.innerHTML = currentDate.toLocaleDateString(undefined, opts) +
         (isToday ? '<span class="today-hint">Today</span>' : '');
-      dateNextEl.disabled = isToday;
+      dateNextEl.disabled = dateKey(currentDate) >= dateKey(maxFuture);
     } else if (currentView === 'week') {
       const week = getWeekRange(currentDate);
       const sOpts = { month: 'short', day: 'numeric' };
@@ -958,7 +1011,8 @@
   dateNextEl.addEventListener('click', () => {
     const today = new Date();
     if (currentView === 'day') {
-      if (dateKey(currentDate) < dateKey(today)) currentDate.setDate(currentDate.getDate() + 1);
+      const maxFuture = new Date(today); maxFuture.setDate(today.getDate() + 3);
+      if (dateKey(currentDate) < dateKey(maxFuture)) currentDate.setDate(currentDate.getDate() + 1);
     } else if (currentView === 'week') {
       const thisWeek = getWeekRange(today);
       const curWeek = getWeekRange(currentDate);
@@ -997,6 +1051,7 @@
       renderExercise(day, dk);
       renderNutrition(day, dk);
       renderSkin();
+      renderNotes(day);
     } else {
       dayContent.style.display = 'none';
       summaryContent.style.display = '';
@@ -1092,62 +1147,59 @@
   // --- Exercise ---
   function renderExercise(day, dk) {
     let html = '';
-    let doneCount = 0;
+    let totalMins = 0;
 
-    EXERCISES.forEach(ex => {
-      const e = day.exercises[ex.key];
-      const isDone = e && e.done;
-      if (isDone) doneCount++;
-      const freq = exerciseFreq(ex.key);
+    EXERCISE_CATEGORIES.forEach(cat => {
+      html += '<div class="exercise-category">' + cat.label + '</div>';
+      cat.items.forEach(ex => {
+        const e = day.exercises[ex.key] || { intensity: null, minutes: 0 };
+        if (e.intensity) totalMins += (e.minutes || 0);
 
-      html += '<div class="exercise-row' + (isDone ? ' done' : '') + '" data-ex="' + ex.key + '">';
-      html += '<div class="exercise-check">' + (isDone ? '&#10003;' : '') + '</div>';
-      html += '<span class="exercise-label">' + ex.label + '</span>';
-      html += '<span class="exercise-freq">' + freq + '/7</span>';
-      html += '</div>';
-
-      if (isDone) {
-        html += '<div class="exercise-notes" data-ex-notes="' + ex.key + '">';
-        html += '<input type="text" placeholder="Add notes..." value="' + escapeAttr(e.notes || '') + '">';
+        html += '<div class="exercise-row">';
+        html += '<span class="exercise-label">' + ex.label + '</span>';
+        html += '<div class="intensity-row">';
+        ['low', 'medium', 'high'].forEach(level => {
+          const label = level === 'medium' ? 'Med' : level.charAt(0).toUpperCase() + level.slice(1);
+          html += '<button class="intensity-btn ' + level + (e.intensity === level ? ' active' : '') +
+            '" data-ex="' + ex.key + '" data-level="' + level + '">' + label + '</button>';
+        });
         html += '</div>';
-      }
+        html += '<div class="minutes-wrap">';
+        html += '<input class="minutes-input" type="number" inputmode="numeric" min="0" max="999" ' +
+          'placeholder="—" data-ex="' + ex.key + '" value="' + (e.minutes || '') + '">';
+        html += '<span class="minutes-label">min</span>';
+        html += '</div>';
+        html += '</div>';
+      });
     });
 
     exerciseBody.innerHTML = html;
-    exerciseSummary.textContent = doneCount + ' of ' + EXERCISES.length + ' done';
+    exerciseSummary.textContent = totalMins > 0 ? totalMins + ' min logged' : '';
 
-    // Wire toggle events
-    exerciseBody.querySelectorAll('.exercise-row').forEach(row => {
-      row.addEventListener('click', () => {
-        const key = row.dataset.ex;
-        day.exercises[key].done = !day.exercises[key].done;
-        if (!day.exercises[key].done) day.exercises[key].notes = '';
+    // Wire intensity buttons
+    exerciseBody.querySelectorAll('.intensity-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const key = btn.dataset.ex;
+        const level = btn.dataset.level;
+        const entry = day.exercises[key];
+        entry.intensity = entry.intensity === level ? null : level;
         save();
         render();
       });
     });
 
-    // Wire notes events
-    exerciseBody.querySelectorAll('.exercise-notes input').forEach(input => {
-      const key = input.closest('[data-ex-notes]').dataset.exNotes;
+    // Wire minutes inputs
+    exerciseBody.querySelectorAll('.minutes-input').forEach(input => {
       input.addEventListener('click', e => e.stopPropagation());
       input.addEventListener('change', () => {
-        day.exercises[key].notes = input.value;
+        const key = input.dataset.ex;
+        const val = parseInt(input.value, 10);
+        day.exercises[key].minutes = isNaN(val) ? 0 : val;
         save();
+        render();
       });
     });
-  }
-
-  function exerciseFreq(key) {
-    let count = 0;
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dk = dateKey(d);
-      if (data.days[dk] && data.days[dk].exercises[key] && data.days[dk].exercises[key].done) count++;
-    }
-    return count;
   }
 
   // --- Nutrition ---
@@ -1538,30 +1590,44 @@
     html += '<div class="summary-card">';
     html += '<p class="summary-card-title">Exercise</p>';
 
-    let totalActiveDays = 0;
+    let totalMins = 0, highMins = 0, medMins = 0, lowMins = 0, activeDays = 0;
     dayKeys.forEach(dk => {
-      if (data.days[dk]) {
-        const ex = data.days[dk].exercises || {};
-        if (Object.values(ex).some(e => e && e.done)) totalActiveDays++;
-      }
+      if (!data.days[dk]) return;
+      const ex = data.days[dk].exercises || {};
+      let dayActive = false;
+      EXERCISES.forEach(e => {
+        const entry = ex[e.key];
+        if (entry && entry.intensity) {
+          const m = entry.minutes || 0;
+          totalMins += m;
+          if (entry.intensity === 'high')   highMins += m;
+          else if (entry.intensity === 'medium') medMins += m;
+          else if (entry.intensity === 'low')    lowMins += m;
+          dayActive = true;
+        }
+      });
+      if (dayActive) activeDays++;
     });
 
+    const pct = totalDays > 0 ? Math.round(activeDays / totalDays * 100) : 0;
     html += '<div class="stat-grid" style="margin-bottom:12px">';
-    html += '<div class="stat-box"><div class="stat-box-value">' + totalActiveDays + '</div><div class="stat-box-label">Active Days</div><div class="stat-box-sub">out of ' + totalDays + '</div></div>';
-    const pct = totalDays > 0 ? Math.round(totalActiveDays / totalDays * 100) : 0;
+    html += '<div class="stat-box"><div class="stat-box-value">' + totalMins + '</div><div class="stat-box-label">Total Mins</div></div>';
+    html += '<div class="stat-box"><div class="stat-box-value">' + activeDays + '</div><div class="stat-box-label">Active Days</div><div class="stat-box-sub">out of ' + totalDays + '</div></div>';
     html += '<div class="stat-box"><div class="stat-box-value">' + pct + '%</div><div class="stat-box-label">Consistency</div></div>';
     html += '</div>';
 
-    EXERCISES.forEach(ex => {
-      let count = 0;
-      dayKeys.forEach(dk => {
-        if (data.days[dk] && data.days[dk].exercises && data.days[dk].exercises[ex.key] && data.days[dk].exercises[ex.key].done) count++;
-      });
-      const barPct = totalDays > 0 ? (count / totalDays * 100) : 0;
+    const intensities = [
+      { label: 'High',   mins: highMins, color: 'var(--red)'   },
+      { label: 'Medium', mins: medMins,  color: 'var(--yellow)' },
+      { label: 'Low',    mins: lowMins,  color: 'var(--green)'  },
+    ];
+    intensities.forEach(({ label, mins, color }) => {
+      const barPct = totalMins > 0 ? (mins / totalMins * 100) : 0;
       html += '<div class="exercise-stat-row">';
-      html += '<span class="exercise-stat-name">' + ex.label + '</span>';
-      html += '<div class="exercise-stat-bar"><div class="exercise-stat-fill" style="width:' + barPct + '%"></div></div>';
-      html += '<span class="exercise-stat-count">' + count + '/' + totalDays + '</span>';
+      html += '<span class="exercise-stat-name" style="display:flex;align-items:center;gap:6px">' +
+        '<span style="width:8px;height:8px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0"></span>' + label + '</span>';
+      html += '<div class="exercise-stat-bar"><div class="exercise-stat-fill" style="width:' + barPct + '%;background:' + color + '"></div></div>';
+      html += '<span class="exercise-stat-count">' + mins + ' min</span>';
       html += '</div>';
     });
     html += '</div>';
@@ -1769,6 +1835,15 @@
 
   function escapeAttr(s) {
     return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderNotes(day) {
+    const ta = document.getElementById('notes-textarea');
+    ta.value = day.notes || '';
+    ta.oninput = () => {
+      day.notes = ta.value;
+      save();
+    };
   }
 
   // --- Init ---
